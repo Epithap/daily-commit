@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Randomize commits and push
         run: |
@@ -25,19 +27,18 @@ jobs:
           TODAY=$(date +'%Y-%m-%d')
 
           for ((i=1; i<=COUNT; i++)); do
-            # Acak jam (00-23) dan menit (00-59)
+            # Acak jam (00-23), menit (00-59), dan detik (00-59)
             RAND_HOUR=$(printf "%02d" $((RANDOM % 24)))
             RAND_MIN=$(printf "%02d" $((RANDOM % 60)))
             RAND_SEC=$(printf "%02d" $((RANDOM % 60)))
-            FAKE_DATE="${TODAY}T${RAND_HOUR}:${RAND_MIN}:${RAND_SEC}"
+            FAKE_DATE="${TODAY}T${RAND_HOUR}:${RAND_MIN}:${RAND_SEC}+00:00"
 
             # Update file
             echo "Update on ${FAKE_DATE} (commit $i of $COUNT)" >> last_updated.txt
             git add last_updated.txt
 
-            # Set git author & committer date agar jam commit tercatat acak
-            GIT_AUTHOR_DATE="$FAKE_DATE" GIT_COMMITTER_DATE="$FAKE_DATE" \
-            git commit -m "chore: automated update ${TODAY} #$i" || exit 0
+            # Commit dengan variabel environment tanggal secara eksplisit
+            GIT_AUTHOR_DATE="$FAKE_DATE" GIT_COMMITTER_DATE="$FAKE_DATE" git commit -m "chore: automated update ${TODAY} #$i" || exit 0
           done
 
           git push
